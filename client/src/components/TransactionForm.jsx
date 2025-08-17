@@ -160,23 +160,35 @@ const TransactionForm = ({ transaction, onSuccess, onCancel }) => {
 
       <div className="form-field">
         <label className="form-label">Expense for</label>
-        <div className="flex space-x-2 items-center">
-          <select {...register('forMember')} className="form-input">
+        <div className="flex items-center space-x-2">
+          <select {...register('forMember')} className="input flex-1 max-w-xs">
             <option value="Self">Self</option>
             {members.map(m => (
               <option key={m._id} value={m._id}>{m.name}</option>
             ))}
           </select>
-          <button type="button" onClick={() => setShowAddMember(true)} className="form-button-secondary">Add</button>
+
+          <button
+            type="button"
+            onClick={() => setShowAddMember(true)}
+            aria-label="Add family member"
+            className="form-button btn-small rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M12 5a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H6a1 1 0 110-2h5V6a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
       </div>
 
       {showAddMember && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded p-4 w-full max-w-sm">
-            <h3 className="font-semibold mb-2">Add Family Member</h3>
-            <input value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} placeholder="Name" className="form-input mb-2" />
-            <div className="flex space-x-2 justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-4">Add Family Member</h3>
+            <div className="space-y-3">
+              <input value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} placeholder="Name" className="input" />
+            </div>
+            <div className="mt-4 flex justify-end space-x-2">
               <button type="button" onClick={() => setShowAddMember(false)} className="form-button-secondary btn-small">Cancel</button>
               <button type="button" onClick={async () => {
                 if (!newMemberName.trim()) return

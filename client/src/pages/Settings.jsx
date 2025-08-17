@@ -168,15 +168,20 @@ const Settings = () => {
         </div>
 
         <div className="mt-4">
-          <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="Member name" className="input w-80" />
-          <div className="mt-2 space-x-2">
+          <div className="flex items-center space-x-2">
+            <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="Member name" className="input flex-1 max-w-xs" />
+
             {editing ? (
-              <>
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 <button onClick={() => handleUpdate(editing)} className="form-button btn-small">Save</button>
                 <button onClick={() => { setEditing(null); setNameInput('') }} className="form-button-secondary btn-small">Cancel</button>
-              </>
+              </div>
             ) : (
-              <button onClick={handleAdd} className="form-button btn-small">Add Member</button>
+              <button onClick={handleAdd} aria-label="Add member" className="form-button btn-small rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M12 5a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H6a1 1 0 110-2h5V6a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+              </button>
             )}
           </div>
         </div>
