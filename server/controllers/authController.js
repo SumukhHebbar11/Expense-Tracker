@@ -128,3 +128,46 @@ export const getMe = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// @desc    Update current user's profile (username/email/password)
+// @route   PUT /api/auth/me
+// @access  Private
+export const updateMe = async (req, res) => {
+  try {
+    const { username, email, password, currentPassword } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // NOTE: removed requirement for currentPassword so email/password can be updated without it.
+
+    // If email changed, ensure uniqueness
+    if (email && email !== user.email) {
+      const exists = await User.findOne({ email });
+      if (exists)
+        return res.status(400).json({ message: "Email already in use" });
+      user.email = email;
+    }
+
+    if (username) user.username = username;
+
+    if (password) user.password = password; // will be hashed by pre-save hook
+
+    await user.save();
+
+    // Return updated user and refresh token
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error while updating profile" });
+  }
+};

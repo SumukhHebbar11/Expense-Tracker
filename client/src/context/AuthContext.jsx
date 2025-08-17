@@ -90,14 +90,30 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'LOGOUT' })
   }, [])
 
+  const updateProfile = useCallback(async (payload) => {
+    dispatch({ type: 'LOGIN_START' })
+    try {
+      const response = await authAPI.updateMe(payload)
+      localStorage.setItem('token', response.token)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      dispatch({ type: 'LOGIN_SUCCESS', payload: response.user })
+      return response
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Update failed'
+      dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage })
+      throw new Error(errorMessage)
+    }
+  }, [])
+
   const value = useMemo(() => ({
     user: state.user,
     loading: state.loading,
     error: state.error,
     login,
     register,
-    logout
-  }), [state.user, state.loading, state.error, login, register, logout])
+    logout,
+    updateProfile
+  }), [state.user, state.loading, state.error, login, register, logout, updateProfile])
 
   return (
     <AuthContext.Provider value={value}>

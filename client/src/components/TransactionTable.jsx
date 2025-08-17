@@ -88,13 +88,14 @@ const TransactionTable = ({ transactions, onEdit, isLoading }) => {
                   </div>
                 </div>
                 <div className="mt-2 text-sm text-gray-700 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: cat.color }}>
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: cat.color }}>
                       <span className="text-sm" role="img" aria-label={transaction.category}>{cat.icon}</span>
                     </div>
-                    <div className="text-sm text-gray-600 truncate max-w-xs">{transaction.description || '-'}</div>
+                    <div className="text-sm text-gray-600 truncate">{transaction.description || '-'}</div>
+                    <div className="text-xs text-gray-500 ml-2 flex-shrink-0">For: {transaction.forMember || 'Self'}</div>
                   </div>
-                    <div className="space-x-2">
+                  <div className="space-x-2 flex-shrink-0">
                     <button onClick={() => onEdit(transaction)} className="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
                     <button
                       onClick={() => handleDelete(transaction._id)}
@@ -111,17 +112,18 @@ const TransactionTable = ({ transactions, onEdit, isLoading }) => {
         </div>
 
       
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="w-full table-fixed">
+  <div className="hidden sm:block overflow-x-auto">
+  <table className="w-full table-auto">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-72">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Payment Method</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Expense For</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -129,8 +131,16 @@ const TransactionTable = ({ transactions, onEdit, isLoading }) => {
                 <tr key={transaction._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(transaction.date)}</td>
                   <td className="px-6 py-4 whitespace-nowrap"><span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${transaction.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{transaction.type ? transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1) : ''}</span></td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><div className="flex items-center space-x-3"><div className="flex items-center justify-center w-8 h-8 rounded-full" style={{ backgroundColor: getCategory(transaction.category).color }}><span className="text-sm" role="img" aria-label={transaction.category}>{getCategory(transaction.category).icon}</span></div><span>{transaction.category}</span></div></td>
-                  <td className="px-6 py-4 text-sm text-gray-900 truncate">{transaction.description || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full" style={{ backgroundColor: getCategory(transaction.category).color }}>
+                        <span className="text-sm" role="img" aria-label={transaction.category}>{getCategory(transaction.category).icon}</span>
+                      </div>
+                      <span className="truncate max-w-xs block">{transaction.category}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900 truncate max-w-md">{transaction.description || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">{transaction.forMember || 'Self'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{formatAmount(transaction.amount, transaction.type)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{transaction.paymentMethod}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">

@@ -46,6 +46,11 @@ const transactionSchema = new mongoose.Schema(
       ],
       default: "Cash",
     },
+    forMemberId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FamilyMember",
+      default: null,
+    },
   },
   {
     timestamps: true,

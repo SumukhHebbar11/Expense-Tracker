@@ -5,7 +5,8 @@ const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: '📊' },
     { to: '/transactions', label: 'Transactions', icon: '💰' },
-    { to: '/reports', label: 'Reports', icon: '📈' }
+  { to: '/reports', label: 'Reports', icon: '📈' },
+  { to: '/settings', label: 'Settings', icon: '⚙️' }
   ]
 
   return (

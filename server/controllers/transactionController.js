@@ -1,5 +1,6 @@
 import { z } from "zod";
 import Transaction from "../models/Transaction.js";
+import FamilyMember from "../models/FamilyMember.js";
 
 const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
@@ -18,6 +19,7 @@ const transactionSchema = z.object({
       "Other",
     ])
     .optional(),
+  forMember: z.string().optional(),
 });
 
 export const getTransactions = async (req, res) => {
@@ -58,13 +60,23 @@ export const getTransactions = async (req, res) => {
     const transactions = await Transaction.find(query)
       .sort(sortObj)
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .populate({ path: "forMemberId", select: "name" });
 
     const total = await Transaction.countDocuments(query);
 
+    // Map transactions to include forMember string for client convenience
+    const mapped = transactions.map((t) => {
+      const obj = t.toObject();
+      obj.forMember = obj.forMemberId
+        ? obj.forMemberId.name
+        : obj.forMember || "Self";
+      return obj;
+    });
+
     res.json({
       success: true,
-      transactions,
+      transactions: mapped,
       totalPages: Math.ceil(total / limit),
       currentPage: parseInt(page),
       total,
@@ -85,16 +97,35 @@ export const createTransaction = async (req, res) => {
       date: req.body.date ? new Date(req.body.date).toISOString() : undefined,
     });
 
+    // Handle forMember: accept 'Self' or a member id
+    let forMemberId = null;
+    if (validatedData.forMember && validatedData.forMember !== "Self") {
+      // expect an ObjectId string
+      const member = await FamilyMember.findOne({
+        _id: validatedData.forMember,
+        userId: req.user._id,
+      });
+      if (!member)
+        return res.status(400).json({ message: "Invalid forMember value" });
+      forMemberId = member._id;
+    }
+
     const transaction = await Transaction.create({
       ...validatedData,
+      forMemberId,
       userId: req.user._id,
       date: validatedData.date ? new Date(validatedData.date) : new Date(),
     });
 
+    // populate forMember name for response
+    await transaction.populate({ path: "forMemberId", select: "name" });
+    const txObj = transaction.toObject();
+    txObj.forMember = txObj.forMemberId ? txObj.forMemberId.name : "Self";
+
     res.status(201).json({
       success: true,
       message: "Transaction added successfully",
-      transaction,
+      transaction: txObj,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -127,16 +158,34 @@ export const updateTransaction = async (req, res) => {
       return res.status(404).json({ message: "Transaction not found" });
     }
 
+    // Process forMember when updating
+    let forMemberId = transaction.forMemberId || null;
+    if (validatedData.forMember && validatedData.forMember !== "Self") {
+      const member = await FamilyMember.findOne({
+        _id: validatedData.forMember,
+        userId: req.user._id,
+      });
+      if (!member)
+        return res.status(400).json({ message: "Invalid forMember value" });
+      forMemberId = member._id;
+    } else if (validatedData.forMember === "Self") {
+      forMemberId = null;
+    }
+
     const updatedTransaction = await Transaction.findByIdAndUpdate(
       req.params.id,
       {
         ...validatedData,
+        forMemberId,
         date: validatedData.date
           ? new Date(validatedData.date)
           : transaction.date,
       },
       { new: true, runValidators: true }
-    );
+    ).populate({ path: "forMemberId", select: "name" });
+
+    const txObj = updatedTransaction.toObject();
+    txObj.forMember = txObj.forMemberId ? txObj.forMemberId.name : "Self";
 
     res.json({
       success: true,

@@ -54,6 +54,10 @@ export const authAPI = {
     const response = await api.get("/auth/me");
     return response.data;
   },
+  updateMe: async (payload) => {
+    const response = await api.put("/auth/me", payload);
+    return response.data;
+  },
 };
 
 // Transaction API calls
@@ -80,6 +84,25 @@ export const transactionAPI = {
 
   getSummary: async (params = {}) => {
     const response = await api.get("/transactions/summary", { params });
+    return response.data;
+  },
+};
+
+export const familyAPI = {
+  list: async () => {
+    const response = await api.get("/family-members");
+    return response.data;
+  },
+  add: async (payload) => {
+    const response = await api.post("/family-members", payload);
+    return response.data;
+  },
+  update: async (id, payload) => {
+    const response = await api.put(`/family-members/${id}`, payload);
+    return response.data;
+  },
+  remove: async (id) => {
+    const response = await api.delete(`/family-members/${id}`);
     return response.data;
   },
 };
