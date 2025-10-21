@@ -78,9 +78,16 @@ const Register = () => {
       setLoading(true)
       const { confirmPassword, ...registerData } = data
       await authAPI.register(registerData)
+      // Bypass OTP screen for now. Original logic commented below for later use.
+      /*
       setUserEmail(data.email)
       setShowOtpScreen(true)
-      showSuccessToast('OTP sent to your email! Please check your inbox.')
+  // showSuccessToast('OTP sent to your email! Please check your inbox.')
+      */
+      showSuccessToast('Account created! You can now login.')
+      setTimeout(() => {
+        navigate('/login')
+      }, 1500)
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Unable to create account. Please try again.'
       setError(errorMessage)
@@ -94,11 +101,11 @@ const Register = () => {
     try {
       setError('')
       setLoading(true)
-      await authAPI.verifyEmail(userEmail, otp)
-      showSuccessToast('Email verified successfully! You can now login.')
-      setTimeout(() => {
-        navigate('/login')
-      }, 2000)
+  // await authAPI.verifyEmail(userEmail, otp)
+  // showSuccessToast('Email verified successfully! You can now login.')
+  // setTimeout(() => {
+  //   navigate('/login')
+  // }, 2000)
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Invalid or expired OTP.'
       setError(errorMessage)
@@ -110,77 +117,8 @@ const Register = () => {
 
   // If showing OTP screen, render that instead
   if (showOtpScreen) {
-    return (
-      <>
-        <Toast ref={toast} position="top-right" />
-        <div className="auth-background">
-          <div className="form-container">
-            <Card className="form-card">
-              <div className="p-6">
-                <div className="form-header">
-                  <h2 className="form-title">
-                    Verify Your Email
-                  </h2>
-                  <p className="form-subtitle">
-                    We've sent a 6-digit OTP to <strong>{userEmail}</strong>
-                  </p>
-                </div>
-
-                <div className="space-y-6 mt-6">
-                  {error && (
-                    <div className="form-message">
-                      <Message severity="error" text={error} className="w-full" />
-                    </div>
-                  )}
-
-                  <div className="form-field">
-                    <label className="form-label text-center block mb-4">
-                      Enter OTP
-                    </label>
-                    <div className="flex justify-center">
-                      <InputOtp
-                        value={otp}
-                        onChange={(e) => setOtp(e.value)}
-                        length={6}
-                        integerOnly
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-actions form-actions-single">
-                    <Button
-                      type="button"
-                      onClick={handleVerifyOtp}
-                      disabled={loading || otp.length !== 6}
-                      loading={loading}
-                      label={loading ? 'Verifying...' : 'Verify OTP'}
-                      className="form-button"
-                    />
-                  </div>
-
-                  <div className="form-footer">
-                    <p className="form-footer-text">
-                      Didn't receive the code?{' '}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowOtpScreen(false)
-                          setOtp('')
-                          setError('')
-                        }}
-                        className="form-footer-link"
-                      >
-                        Go back
-                      </button>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </>
-    )
+  // OTP screen and related UI fully bypassed for now.
+  return null;
   }
 
   return (

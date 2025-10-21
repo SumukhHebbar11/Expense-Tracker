@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'LOGIN_START' })
     try {
       const response = await authAPI.register(userData)
-      // Don't auto-login, user needs to verify email first
+  // Email verification bypassed for now. Original logic commented below for later use.
       dispatch({ type: 'SET_LOADING', payload: false })
       return response
     } catch (error) {

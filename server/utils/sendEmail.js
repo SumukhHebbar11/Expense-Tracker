@@ -8,6 +8,8 @@ import nodemailer from "nodemailer";
  * @param {string} html - Email body (HTML) - optional
  */
 export const sendEmail = async (to, subject, text, html = null) => {
+  // Email sending bypassed for now. Original code is commented below for later use.
+  /*
   try {
     // Create transporter
     const transporter = nodemailer.createTransport({
@@ -35,4 +37,7 @@ export const sendEmail = async (to, subject, text, html = null) => {
     console.error("Error sending email:", error);
     throw new Error("Failed to send email");
   }
+  */
+  // Simulate success response
+  return { success: true, messageId: "bypassed" };
 };

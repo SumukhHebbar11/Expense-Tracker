@@ -50,10 +50,10 @@ export const authAPI = {
     return response.data;
   },
 
-  verifyEmail: async (email, otp) => {
-    const response = await api.post("/auth/verify-email", { email, otp });
-    return response.data;
-  },
+  // verifyEmail: async (email, otp) => {
+  //   const response = await api.post("/auth/verify-email", { email, otp });
+  //   return response.data;
+  // },
 
   forgotPassword: async (email) => {
     const response = await api.post("/auth/forgot-password", { email });

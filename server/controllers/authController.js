@@ -124,20 +124,16 @@ export const verifyEmail = async (req, res) => {
 
     // Check if OTP exists
     if (!user.otp || !user.otpExpiry) {
-      return res
-        .status(400)
-        .json({
-          message: "No verification code found. Please request a new one.",
-        });
+      return res.status(400).json({
+        message: "No verification code found. Please request a new one.",
+      });
     }
 
     // Check if OTP has expired
     if (new Date() > user.otpExpiry) {
-      return res
-        .status(400)
-        .json({
-          message: "Verification code has expired. Please request a new one.",
-        });
+      return res.status(400).json({
+        message: "Verification code has expired. Please request a new one.",
+      });
     }
 
     // Verify OTP
@@ -192,14 +188,14 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check if email is verified
-    if (!user.isVerified) {
-      return res.status(403).json({
-        message:
-          "Please verify your email before logging in. Check your inbox for the verification code.",
-        isVerified: false,
-      });
-    }
+    // Email verification bypassed for now. Original logic commented below for later use.
+    // if (!user.isVerified) {
+    //   return res.status(403).json({
+    //     message:
+    //       "Please verify your email before logging in. Check your inbox for the verification code.",
+    //     isVerified: false,
+    //   });
+    // }
 
     // Generate token
     const token = generateToken(user._id);
@@ -383,11 +379,9 @@ export const resetPassword = async (req, res) => {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        return res
-          .status(400)
-          .json({
-            message: "Reset link has expired. Please request a new one.",
-          });
+        return res.status(400).json({
+          message: "Reset link has expired. Please request a new one.",
+        });
       }
       return res.status(400).json({ message: "Invalid reset link" });
     }
