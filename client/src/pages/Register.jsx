@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -10,9 +10,10 @@ import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
 import { Message } from 'primereact/message'
 import { Toast } from 'primereact/toast'
+import { InputOtp } from 'primereact/inputotp'
 import '../styles/forms.css'
 
-import { useAuth } from '../context/AuthContext'
+import { authAPI } from '../utils/api'
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -26,8 +27,12 @@ const registerSchema = z.object({
 
 const Register = () => {
   const [error, setError] = useState('')
+  const [showOtpScreen, setShowOtpScreen] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [loading, setLoading] = useState(false)
   const toast = useRef(null)
-  const { register: registerUser, loading } = useAuth()
+  const navigate = useNavigate()
   
   const formConfig = useMemo(() => ({
     resolver: zodResolver(registerSchema),
@@ -70,15 +75,113 @@ const Register = () => {
   const onSubmit = useCallback(async (data) => {
     try {
       setError('')
+      setLoading(true)
       const { confirmPassword, ...registerData } = data
-      await registerUser(registerData)
-      showSuccessToast('Account created successfully! Welcome to Expense Tracker.')
+      await authAPI.register(registerData)
+      setUserEmail(data.email)
+      setShowOtpScreen(true)
+      showSuccessToast('OTP sent to your email! Please check your inbox.')
     } catch (err) {
-      const errorMessage = err.message || 'Unable to create account. Please try again.'
+      const errorMessage = err.response?.data?.message || err.message || 'Unable to create account. Please try again.'
       setError(errorMessage)
       showErrorToast(errorMessage)
+    } finally {
+      setLoading(false)
     }
-  }, [registerUser, showSuccessToast, showErrorToast])
+  }, [showSuccessToast, showErrorToast])
+
+  const handleVerifyOtp = useCallback(async () => {
+    try {
+      setError('')
+      setLoading(true)
+      await authAPI.verifyEmail(userEmail, otp)
+      showSuccessToast('Email verified successfully! You can now login.')
+      setTimeout(() => {
+        navigate('/login')
+      }, 2000)
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || 'Invalid or expired OTP.'
+      setError(errorMessage)
+      showErrorToast(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }, [userEmail, otp, showSuccessToast, showErrorToast, navigate])
+
+  // If showing OTP screen, render that instead
+  if (showOtpScreen) {
+    return (
+      <>
+        <Toast ref={toast} position="top-right" />
+        <div className="auth-background">
+          <div className="form-container">
+            <Card className="form-card">
+              <div className="p-6">
+                <div className="form-header">
+                  <h2 className="form-title">
+                    Verify Your Email
+                  </h2>
+                  <p className="form-subtitle">
+                    We've sent a 6-digit OTP to <strong>{userEmail}</strong>
+                  </p>
+                </div>
+
+                <div className="space-y-6 mt-6">
+                  {error && (
+                    <div className="form-message">
+                      <Message severity="error" text={error} className="w-full" />
+                    </div>
+                  )}
+
+                  <div className="form-field">
+                    <label className="form-label text-center block mb-4">
+                      Enter OTP
+                    </label>
+                    <div className="flex justify-center">
+                      <InputOtp
+                        value={otp}
+                        onChange={(e) => setOtp(e.value)}
+                        length={6}
+                        integerOnly
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-actions form-actions-single">
+                    <Button
+                      type="button"
+                      onClick={handleVerifyOtp}
+                      disabled={loading || otp.length !== 6}
+                      loading={loading}
+                      label={loading ? 'Verifying...' : 'Verify OTP'}
+                      className="form-button"
+                    />
+                  </div>
+
+                  <div className="form-footer">
+                    <p className="form-footer-text">
+                      Didn't receive the code?{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowOtpScreen(false)
+                          setOtp('')
+                          setError('')
+                        }}
+                        className="form-footer-link"
+                      >
+                        Go back
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>

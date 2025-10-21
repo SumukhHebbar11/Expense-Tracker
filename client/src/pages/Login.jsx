@@ -130,6 +130,11 @@ const Login = () => {
                     {errors.password && (
                       <small className="form-error">{errors.password.message}</small>
                     )}
+                    <div className="flex justify-end mt-1">
+                      <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                        Forgot password?
+                      </Link>
+                    </div>
                   </div>
                 </div>
 

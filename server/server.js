@@ -5,10 +5,16 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import familyMemberRoutes from "./routes/familyMemberRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import { errorHandler } from "./middleware/errorMiddleware.js";
+import { startDailyNotificationJob } from "./jobs/dailyNotifications.js";
+import { initializeFirebase } from "./config/firebase.js";
 
 dotenv.config();
 const app = express();
+
+// Initialize Firebase Admin SDK for push notifications
+initializeFirebase();
 
 // Simple helper to partially mask sensitive values when printing env
 const mask = (str) => {
@@ -22,6 +28,10 @@ let server;
 const start = async () => {
   try {
     await connectDB();
+
+    // Start daily notification cron job (email only)
+    startDailyNotificationJob();
+
     const PORT = process.env.PORT || 5000;
     server = app.listen(PORT, () => {
       console.log(
@@ -57,6 +67,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/family-members", familyMemberRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({

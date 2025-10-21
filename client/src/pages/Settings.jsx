@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useFamilyMembers, useAddFamilyMember, useUpdateFamilyMember, useDeleteFamilyMember } from '../hooks/useFamilyMembers'
 import { useAuth } from '../context/AuthContext'
+import { useNotifications } from '../hooks/useNotifications'
 
 const Settings = () => {
   const { data: members = [], isLoading } = useFamilyMembers()
@@ -8,6 +9,7 @@ const Settings = () => {
   const update = useUpdateFamilyMember()
   const remove = useDeleteFamilyMember()
   const { user, updateProfile } = useAuth()
+  const notifications = useNotifications()
 
   const [usernameInput, setUsernameInput] = useState(user?.username || '')
   const [emailInput, setEmailInput] = useState(user?.email || '')
@@ -144,6 +146,113 @@ const Settings = () => {
              <button onClick={handleReset} className="form-button-secondary btn-small">Reset</button>
           <button onClick={handleProfileSave} disabled={profileLoading} className="form-button btn-inline">{profileLoading ? 'Saving...' : 'Save Profile'}</button>
         </div>
+      </div>
+
+      {/* Push Notifications card */}
+      <div className="card p-4">
+        <h3 className="font-semibold mb-3 flex items-center space-x-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-blue-600">
+            <path d="M5.85 3.5a.75.75 0 00-1.117-1 9.719 9.719 0 00-2.348 4.876.75.75 0 001.479.248A8.219 8.219 0 015.85 3.5zM19.267 2.5a.75.75 0 10-1.118 1 8.22 8.22 0 011.987 4.124.75.75 0 001.48-.248A9.72 9.72 0 0019.266 2.5z" />
+            <path fillRule="evenodd" d="M12 2.25A6.75 6.75 0 005.25 9v.75a8.217 8.217 0 01-2.119 5.52.75.75 0 00.298 1.206c1.544.57 3.16.99 4.831 1.243a3.75 3.75 0 107.48 0 24.583 24.583 0 004.83-1.244.75.75 0 00.298-1.205 8.217 8.217 0 01-2.118-5.52V9A6.75 6.75 0 0012 2.25zM9.75 18c0-.034 0-.067.002-.1a25.05 25.05 0 004.496 0l.002.1a2.25 2.25 0 11-4.5 0z" clipRule="evenodd" />
+          </svg>
+          <span>Push Notifications</span>
+        </h3>
+
+        {!notifications.isSupported ? (
+          <div className="text-sm text-gray-600">
+            Push notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Edge.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Get daily reminders and updates delivered straight to your device.
+            </p>
+
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className={`w-3 h-3 rounded-full ${notifications.isSubscribed ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                <div>
+                  <div className="text-sm font-medium">
+                    {notifications.isSubscribed ? 'Notifications Enabled' : 'Notifications Disabled'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {notifications.isSubscribed 
+                      ? 'You will receive daily reminders at 9:00 AM'
+                      : notifications.permission === 'denied'
+                      ? 'Permission denied. Enable in browser settings.'
+                      : 'Click subscribe to enable notifications'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-2">
+                {notifications.isSubscribed ? (
+                  <>
+                    <button
+                      onClick={async () => {
+                        const result = await notifications.sendTestNotification();
+                        if (result.success) {
+                          setToast({ type: 'success', text: `Test notification sent via ${result.method}!` });
+                        } else {
+                          setToast({ type: 'error', text: result.error || 'Failed to send test' });
+                        }
+                      }}
+                      disabled={notifications.loading}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
+                    >
+                      {notifications.loading ? 'Sending...' : 'Test'}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const result = await notifications.unsubscribe();
+                        if (result.success) {
+                          setToast({ type: 'success', text: 'Notifications disabled' });
+                        } else {
+                          setToast({ type: 'error', text: result.error || 'Failed to unsubscribe' });
+                        }
+                      }}
+                      disabled={notifications.loading}
+                      className="form-button-secondary btn-small"
+                    >
+                      {notifications.loading ? 'Processing...' : 'Disable'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      const result = await notifications.subscribe();
+                      if (result.success) {
+                        setToast({ type: 'success', text: 'Notifications enabled!' });
+                      } else {
+                        if (result.error === 'permission_denied') {
+                          setToast({ type: 'error', text: 'Permission denied. Check browser settings.' });
+                        } else {
+                          setToast({ type: 'error', text: result.error || 'Failed to subscribe' });
+                        }
+                      }
+                    }}
+                    disabled={notifications.loading || notifications.permission === 'denied'}
+                    className="form-button btn-small"
+                  >
+                    {notifications.loading ? 'Subscribing...' : 'Enable Notifications'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {notifications.error && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                {notifications.error}
+              </div>
+            )}
+
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>📱 <strong>Daily Reminders:</strong> Receive notifications at 9:00 AM every day</p>
+              <p>📧 <strong>Email Fallback:</strong> If push notifications fail, you'll receive emails instead</p>
+              <p>🔒 <strong>Privacy:</strong> We only send scheduled reminders and important updates</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Family members card */}

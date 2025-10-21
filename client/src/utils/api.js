@@ -50,12 +50,50 @@ export const authAPI = {
     return response.data;
   },
 
+  verifyEmail: async (email, otp) => {
+    const response = await api.post("/auth/verify-email", { email, otp });
+    return response.data;
+  },
+
+  forgotPassword: async (email) => {
+    const response = await api.post("/auth/forgot-password", { email });
+    return response.data;
+  },
+
+  resetPassword: async (token, password) => {
+    const response = await api.post(`/auth/reset-password/${token}`, {
+      password,
+    });
+    return response.data;
+  },
+
   getMe: async () => {
     const response = await api.get("/auth/me");
     return response.data;
   },
   updateMe: async (payload) => {
     const response = await api.put("/auth/me", payload);
+    return response.data;
+  },
+
+  // Notification methods
+  savePushToken: async (pushToken) => {
+    const response = await api.post("/notifications/push-token", { pushToken });
+    return response.data;
+  },
+
+  removePushToken: async () => {
+    const response = await api.delete("/notifications/push-token");
+    return response.data;
+  },
+
+  getNotificationStatus: async () => {
+    const response = await api.get("/notifications/status");
+    return response.data;
+  },
+
+  sendTestNotification: async () => {
+    const response = await api.post("/notifications/test");
     return response.data;
   },
 };

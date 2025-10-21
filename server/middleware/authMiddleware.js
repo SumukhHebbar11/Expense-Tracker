@@ -19,6 +19,7 @@ export const authMiddleware = async (req, res, next) => {
     }
 
     req.user = user;
+    req.userId = user._id; // Fix: set userId for downstream controllers
     next();
   } catch (error) {
     res.status(401).json({ message: "Token is not valid" });

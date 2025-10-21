@@ -71,11 +71,8 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'LOGIN_START' })
     try {
       const response = await authAPI.register(userData)
-      
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-      
-      dispatch({ type: 'LOGIN_SUCCESS', payload: response.user })
+      // Don't auto-login, user needs to verify email first
+      dispatch({ type: 'SET_LOADING', payload: false })
       return response
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Registration failed'
