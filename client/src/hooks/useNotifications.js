@@ -175,8 +175,9 @@ export const useNotifications = () => {
 
   /**
    * Send a test notification
+   * Auto-retries with fresh token if current token is invalid
    */
-  const sendTestNotification = useCallback(async () => {
+  const sendTestNotification = useCallback(async (isRetry = false) => {
     setLoading(true);
     setError(null);
 
@@ -191,6 +192,44 @@ export const useNotifications = () => {
       }
     } catch (err) {
       console.error("❌ Error sending test notification:", err);
+
+      // Check if token was cleared (invalid token) and auto-retry
+      const tokenCleared = err.response?.data?.tokenCleared;
+
+      if (tokenCleared && !isRetry) {
+        console.log("🔄 Token was invalid, auto-refreshing...");
+
+        try {
+          // Unregister old service worker to force fresh registration
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            if (registration.active?.scriptURL.includes("firebase-messaging")) {
+              console.log("🗑️ Unregistering old service worker...");
+              await registration.unregister();
+            }
+          }
+
+          // Wait a moment for cleanup
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Re-subscribe with fresh token
+          console.log("🔔 Re-subscribing with fresh token...");
+          const subscribeResult = await subscribe();
+
+          if (subscribeResult.success) {
+            console.log("✅ Got fresh token, retrying test...");
+            // Retry the test notification with the new token
+            return await sendTestNotification(true);
+          } else {
+            throw new Error("Failed to refresh notification token. Please try again.");
+          }
+        } catch (refreshError) {
+          console.error("❌ Auto-refresh failed:", refreshError);
+          setError("Token expired. Please manually re-enable notifications in settings.");
+          return { success: false, error: "Token refresh failed", needsManualRefresh: true };
+        }
+      }
+
       const errorMessage =
         err.response?.data?.message || err.message || "Failed to send test";
       setError(errorMessage);
@@ -198,7 +237,7 @@ export const useNotifications = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [subscribe]);
 
   return {
     // State

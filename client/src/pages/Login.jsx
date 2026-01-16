@@ -15,7 +15,7 @@ import '../styles/forms.css'
 import { useAuth } from '../context/AuthContext'
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email format'),
+  identifier: z.string().min(1, 'Email or username is required'),
   password: z.string().min(1, 'Password is required')
 })
 
@@ -27,7 +27,7 @@ const Login = () => {
   const formConfig = useMemo(() => ({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      identifier: '',
       password: ''
     }
   }), [])
@@ -52,9 +52,10 @@ const Login = () => {
   const onSubmit = useCallback(async (data) => {
     try {
       setError('')
-      await login(data)
+      // Send identifier to backend which accepts email or username
+      await login({ identifier: data.identifier, password: data.password })
     } catch (err) {
-      const errorMessage = err.message || 'Invalid email or password. Please try again.'
+      const errorMessage = err.message || 'Invalid email/username or password. Please try again.'
       setError(errorMessage)
       showErrorToast(errorMessage)
     }
@@ -63,7 +64,7 @@ const Login = () => {
   return (
     <>
       <Toast ref={toast} position="top-right" />
-      
+
       <div className="auth-background">
         <div className="form-container">
           <Card className="form-card">
@@ -73,39 +74,39 @@ const Login = () => {
                   Sign in to Expense Tracker
                 </h2>
               </div>
-            
+
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {error && (
                   <div className="form-message">
                     <Message severity="error" text={error} className="w-full" />
                   </div>
                 )}
-                
+
                 <div className="space-y-5">
                   <div className="form-field">
-                    <label htmlFor="email" className="form-label">
-                      Email address
+                    <label htmlFor="identifier" className="form-label">
+                      Email or Username
                     </label>
                     <Controller
-                      name="email"
+                      name="identifier"
                       control={control}
                       render={({ field }) => (
                         <div className="form-input">
                           <InputText
                             {...field}
-                            id="email"
-                            type="email"
-                            placeholder="Enter your email"
-                            className={`w-full ${errors.email ? 'p-invalid' : ''}`}
+                            id="identifier"
+                            type="text"
+                            placeholder="Enter your email or username"
+                            className={`w-full ${errors.identifier ? 'p-invalid' : ''}`}
                           />
                         </div>
                       )}
                     />
-                    {errors.email && (
-                      <small className="form-error">{errors.email.message}</small>
+                    {errors.identifier && (
+                      <small className="form-error">{errors.identifier.message}</small>
                     )}
                   </div>
-                  
+
                   <div className="form-field">
                     <label htmlFor="password" className="form-label">
                       Password
@@ -147,7 +148,7 @@ const Login = () => {
                     className="form-button"
                   />
                 </div>
-                
+
                 <div className="form-footer">
                   <p className="form-footer-text">
                     Don't have an account?{' '}

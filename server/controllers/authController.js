@@ -10,7 +10,7 @@ const registerSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  identifier: z.string().min(1, "Email or username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -174,10 +174,12 @@ export const login = async (req, res) => {
   try {
     // Validate input
     const validatedData = loginSchema.parse(req.body);
-    const { email, password } = validatedData;
+    const { identifier, password } = validatedData;
 
-    // Check if user exists
-    const user = await User.findOne({ email });
+    // Check if user exists by email or username
+    const user = await User.findOne({
+      $or: [{ email: identifier.toLowerCase() }, { username: identifier }],
+    });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

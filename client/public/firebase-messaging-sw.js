@@ -1,6 +1,9 @@
 // firebase-messaging-sw.js
 // Service Worker for handling background push notifications
 
+// Version for force-refresh on deploy (increment this when deploying updates)
+const SW_VERSION = "1.0.0";
+
 // Import Firebase scripts for service worker
 importScripts(
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"
@@ -117,7 +120,7 @@ self.addEventListener("push", (event) => {
 
 // Log service worker installation
 self.addEventListener("install", (event) => {
-  console.log("[Service Worker] Installing...");
+  console.log(`[Service Worker] Installing version ${SW_VERSION}...`);
   self.skipWaiting();
 });
 

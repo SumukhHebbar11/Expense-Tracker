@@ -163,6 +163,14 @@ export const sendTestNotification = async (req, res) => {
         message: result.message,
         method: result.method,
       });
+    } else if (result.tokenCleared) {
+      // Token was invalid and has been cleared - return 400 with instructions
+      res.status(400).json({
+        success: false,
+        message: result.message,
+        error: result.error,
+        tokenCleared: true,
+      });
     } else {
       res.status(500).json({
         success: false,

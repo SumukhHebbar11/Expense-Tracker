@@ -1,5 +1,6 @@
 import { sendPushNotification } from "../config/firebase.js";
 import { sendEmail } from "./sendEmail.js";
+import User from "../models/User.js";
 
 /**
  * Notification Service
@@ -76,9 +77,8 @@ export const sendDailyReminder = async (user) => {
           Don't forget to check your Expense Tracker today! Stay on top of your finances. 💰
         </p>
         <div style="margin: 30px 0;">
-          <a href="${
-            process.env.CLIENT_URL || "http://localhost:5173"
-          }/dashboard" 
+          <a href="${process.env.CLIENT_URL || "http://localhost:5173"
+      }/dashboard" 
              style="background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
             Open App
           </a>
@@ -186,25 +186,43 @@ export const sendDailyRemindersToAllUsers = async (users) => {
  * @returns {Promise<Object>} - Result of test
  */
 export const sendTestNotification = async (user) => {
-  const { email, username, pushToken } = user;
+  const { email, username, pushToken, _id } = user;
 
   try {
     if (pushToken) {
-      await sendPushNotification(
-        pushToken,
-        "Test Notification",
-        `Hi ${username}, your push notifications are working! ✅`,
-        {
-          type: "test",
-          link: "/settings",
-        }
-      );
+      try {
+        await sendPushNotification(
+          pushToken,
+          "Test Notification",
+          `Hi ${username}, your push notifications are working! ✅`,
+          {
+            type: "test",
+            link: "/settings",
+          }
+        );
 
-      return {
-        success: true,
-        method: "push",
-        message: "Test push notification sent successfully",
-      };
+        return {
+          success: true,
+          method: "push",
+          message: "Test push notification sent successfully",
+        };
+      } catch (pushError) {
+        // If token is invalid, remove it from the database
+        if (pushError.message === "INVALID_TOKEN") {
+          console.log(`🗑️ Removing invalid push token for user: ${username}`);
+
+          // Clear the invalid token from database
+          await User.findByIdAndUpdate(_id, { $unset: { pushToken: 1 } });
+
+          return {
+            success: false,
+            error: "INVALID_TOKEN",
+            message: "Your push token has expired. Please re-enable notifications in settings.",
+            tokenCleared: true,
+          };
+        }
+        throw pushError;
+      }
     } else {
       // Send test email
       await sendEmail(
